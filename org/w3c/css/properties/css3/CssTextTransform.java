@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import static org.w3c.css.values.CssOperator.SPACE;
 
 /**
- * @spec https://www.w3.org/TR/2021/CRD-css-text-3-20210422/#propdef-text-transform
+ * @spec https://www.w3.org/TR/2024/WD-css-text-4-20240219/#propdef-text-transform
  */
 public class CssTextTransform extends org.w3c.css.properties.css.CssTextTransform {
 

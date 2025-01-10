@@ -1,7 +1,7 @@
-// $Id$
+// 
 // Author: Yves Lafon <ylafon@w3.org>
 //
-// (c) COPYRIGHT MIT, ERCIM and Keio University, 2012.
+// (c) COPYRIGHT World Wide Web Consortium, 2024.
 // Please first read the full copyright statement in file COPYRIGHT.html
 package org.w3c.css.properties.css3;
 
@@ -14,7 +14,7 @@ import org.w3c.css.values.CssTypes;
 import org.w3c.css.values.CssValue;
 
 /**
- * @spec https://www.w3.org/TR/2017/WD-css-text-3-20170822/#tab-size-property
+ * @spec https://www.w3.org/TR/2024/WD-css-text-4-20240219/#propdef-tab-size
  */
 public class CssTabSize extends org.w3c.css.properties.css.CssTabSize {
 

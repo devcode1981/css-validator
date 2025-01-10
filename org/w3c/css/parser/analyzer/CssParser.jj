@@ -2062,6 +2062,9 @@ void ruleSet() :
 
 	<LBRACE> {
 	    validSelector = (context_set.size() > 0);
+            if (validSelector) {
+                currentContext = context_set;
+            }
 	}
 	( <S> )*
 	    value_set=declarations()
@@ -2204,11 +2207,11 @@ ArrayList<CssProperty> attributeDeclarations() :
 
 CssSelectors relative_selector() :
 {
-	String comb;
+	String comb = "*none*";
 	CssSelectors current;
 } 
 {
-	comb=combinator() {
+	( comb=combinator() )? {
 		current = new CssSelectors(ac);
 		               switch(comb) {
                         case "+":
@@ -2223,6 +2226,8 @@ CssSelectors relative_selector() :
                         case "||":
                                 current.addColumnCombinator();
                                 break;
+			case "*none*":
+				break;
                         default:
                                 current.addDescendantCombinator();
                 }                  
@@ -2287,7 +2292,7 @@ CssSelectors subclass_selector(CssSelectors selector) :
 
 CssSelectors complex_selector(CssSelectors sel) :
 {
-	String comb;
+	String comb = "*none*";
 	CssSelectors current;
 }
 {
@@ -2323,6 +2328,8 @@ CssSelectors complex_selector(CssSelectors sel) :
 					break;
 				case "||":
 					current.addColumnCombinator();
+					break;
+				case "*none*":
 					break;
 				default:
 					current.addDescendantCombinator();
@@ -2377,7 +2384,7 @@ CssSelectors compound_selector(CssSelectors next) :
         selector.setAtRule(getAtRule());
 }
 {
-	( LOOKAHEAD(3) ( ( ( type_selector(selector) )?  ( LOOKAHEAD(2) subclass_selector(selector) )+ ) ( LOOKAHEAD(2) pseudo_element_selector(selector) ( LOOKAHEAD(2) pseudo_class_selector(selector) )* )* )
+	( LOOKAHEAD(4) ( ( ( type_selector(selector) )?  ( LOOKAHEAD(1) subclass_selector(selector) )+ ) ( LOOKAHEAD(1) pseudo_element_selector(selector) ( LOOKAHEAD(1) pseudo_class_selector(selector) )* )* )
 	| ( type_selector(selector) ( LOOKAHEAD(2) pseudo_element_selector(selector) ( LOOKAHEAD(2) pseudo_class_selector(selector) )* )* )
 	| ( ( LOOKAHEAD(2) pseudo_element_selector(selector) ( LOOKAHEAD(2) pseudo_class_selector(selector) )* )+ ) ) {
 		return selector;
@@ -2953,13 +2960,13 @@ try {
  */
 CssProperty declaration() :
 { String string_property;
-  CssExpression values;
+  CssExpression values = null;
   boolean important = false;
 }
 {
 try {
      string_property=property() <COLON> ( <S> )* 
-      values=expr() ( important=prio() )?
+      ( values=expr() )? ( important=prio() )?
     {
 	try {
             if (string_property == null) {
@@ -2970,20 +2977,27 @@ try {
 	    if (incompatible_error) {
 		throw new InvalidParamException("notforcss1", "inherit", ac);
 	    }
-
-	    if (values.getCount() != 0) {
+	    if (values == null) {
+                if (string_property.startsWith("--")) {
+			values = new CssExpression();
+		} else {
+			// old behaviour for empty properties
+			throw new ParseException();
+		}
+	    }
+	    if (values.getCount() != 0 || string_property.startsWith("--")) {
 		CssProperty p = handleDeclaration(string_property.toLowerCase(),
 						  values, important);
 		// Did the property recognize all values in the expression ?
 
 		if (!values.end() && ac.getMedium() == null) {
-		        addError(new InvalidParamException("unrecognize", "", ac),
+		   addError(new InvalidParamException("unrecognize", "", ac),
 			     values);
 		} else {
-		    // ok, return the new property
-		    return p;
+                    // ok, return the new property
+                    return p;
 		}
-	    }
+            }
 	} catch (InvalidParamException e) {
             incompatible_error = false;
             if (e instanceof WarningParamException) {
@@ -3677,11 +3691,11 @@ CssCheckableValue functionvar() :
  */
 CssValue function() :
 {Token n,p = null,q = null;
- CssExpression exp;
+ CssExpression exp = new CssExpression();
  CssColor color = new CssColor();
 }
 {
-    n=<FUNCTION> ( <S> )*  ( LOOKAHEAD(2) exp=expr()
+    n=<FUNCTION> ( <S> )*  ( LOOKAHEAD(2) ( exp=expr() )?
     ")" { 
 	String funcname = n.image.toLowerCase();
 	if (funcname.equals("rgb(")) {
